@@ -1,0 +1,1315 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<link rel="icon" href="data:," />
+<title>CoAgentHub — Interactive Presentation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ffffff;
+  --surface:#f1f4f1;
+  --surface-2:#e8ede8;
+  --card:#ffffff;
+  --ink:#15211c;
+  --ink-2:#4a5a52;
+  --ink-3:#7a8a81;
+  --line:#dbe3dc;
+  --line-2:#cbd5cc;
+  --accent:#0b6e4f;
+  --accent-2:#0a5c43;
+  --accent-soft:#dff0e7;
+  --accent-ink:#eafff5;
+  --amber:#b45309;
+  --amber-soft:#fef0d8;
+  --red:#b42318;
+  --red-soft:#fde9e7;
+  --blue:#1d4ed8;
+  --blue-soft:#e6edff;
+  --gold:#e8a317;
+  --radius:14px;
+  --radius-lg:20px;
+  --shadow:0 10px 30px rgba(18,32,24,.08);
+  --shadow-sm:0 2px 10px rgba(18,32,24,.06);
+  --font-body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-display:"Sora",var(--font-body);
+  --font-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0c1411;
+    --surface:#131e19;
+    --surface-2:#1a2821;
+    --card:#14201a;
+    --ink:#ecf3ee;
+    --ink-2:#b6c6bc;
+    --ink-3:#8ba197;
+    --line:#24352c;
+    --line-2:#32473b;
+    --accent:#2dd4a3;
+    --accent-2:#2dd4a3;
+    --accent-soft:#14382c;
+    --accent-ink:#0c1411;
+    --amber:#fbbf24;
+    --amber-soft:#3a2a0d;
+    --red:#f87171;
+    --red-soft:#3d1a17;
+    --blue:#93c5fd;
+    --blue-soft:#17233d;
+    --gold:#f5c04e;
+    --shadow:0 12px 32px rgba(0,0,0,.35);
+    --shadow-sm:0 2px 10px rgba(0,0,0,.3);
+  }
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:16.5px;line-height:1.55;-webkit-font-smoothing:antialiased}
+button{font:inherit;cursor:pointer;color:inherit}
+a{color:var(--accent)}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px;border-radius:6px}
+::selection{background:var(--accent);color:#fff}
+
+/* ---------- Deck chrome ---------- */
+.deck{min-height:100dvh;display:flex;flex-direction:column}
+.progress{height:4px;background:var(--surface-2);flex:none}
+.progress span{display:block;height:100%;width:8.33%;background:var(--accent);transition:width .45s ease}
+.chrome{flex:none;display:flex;align-items:center;gap:14px;padding:10px 18px;border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--bg) 88%,transparent)}
+.chrome-left{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
+.hub-mark{width:30px;height:30px;flex:none;border-radius:9px;background:var(--accent);color:#fff;display:grid;place-items:center;font-family:var(--font-display);font-weight:800;font-size:15px;letter-spacing:-.02em}
+.chrome-left>div{min-width:0}
+.chrome-title{font-weight:800;font-size:14.5px;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chrome-title em{font-style:normal;color:var(--ink-3);font-weight:600}
+.chrome-sub{font-size:12.5px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chrome-actions{margin-left:auto;display:flex;gap:8px;flex:none}
+.chip-btn{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:7px 13px;font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:6px}
+.chip-btn:hover{border-color:var(--accent)}
+.chip-btn[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chip-btn svg{width:14px;height:14px}
+
+/* ---------- Stage / slides ---------- */
+.stage{flex:1;position:relative;overflow:hidden;display:flex;flex-direction:column}
+.slide{display:none;flex:1;min-height:0;overflow-y:auto;padding:30px clamp(18px,5vw,64px) 22px;animation:slideIn .35s ease}
+.slide.active{display:block}
+@keyframes slideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.slide{animation:none}.progress span{transition:none}.orbit-ring,.pulse-dot{animation:none!important}}
+
+.slide-inner{max-width:1080px;margin:0 auto;width:100%}
+.kicker{font-family:var(--font-mono);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:600;margin:0 0 12px}
+.kicker span{color:var(--ink-3)}
+h1{font-family:var(--font-display);font-size:clamp(42px,6.2vw,68px);line-height:.98;letter-spacing:-.035em;margin:0 0 16px;font-weight:800}
+h2{font-family:var(--font-display);font-size:clamp(29px,4vw,42px);line-height:1.05;letter-spacing:-.03em;margin:0 0 12px;font-weight:700}
+h3{font-size:18px;line-height:1.3;margin:0 0 6px;letter-spacing:-.01em}
+.lede{font-size:clamp(17px,2vw,20px);line-height:1.55;color:var(--ink-2);max-width:720px;margin:0 0 22px}
+.lede strong{color:var(--ink)}
+.body-sm{font-size:15px;color:var(--ink-2)}
+.mono{font-family:var(--font-mono)}
+.eyebrow-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.slide-no{font-family:var(--font-mono);font-size:12px;color:var(--ink-3);border:1px solid var(--line);border-radius:999px;padding:4px 9px;background:var(--card)}
+
+/* ---------- Buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:999px;padding:12px 20px;font-weight:800;font-size:15px;border:1px solid transparent;text-decoration:none}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent-2)}
+.btn-ghost{background:var(--card);border-color:var(--line-2);color:var(--ink)}
+.btn-ghost:hover{border-color:var(--accent)}
+.btn-sm{padding:8px 14px;font-size:13.5px}
+.btn[disabled]{opacity:.55;cursor:not-allowed}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+
+/* ---------- Cover ---------- */
+.cover-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:36px;align-items:center;margin-top:6px}
+.cover-facts{display:flex;gap:0;border:1px solid var(--line);border-radius:var(--radius);background:var(--card);overflow:hidden;margin-top:26px;max-width:620px}
+.cover-facts div{flex:1;padding:14px 16px;border-right:1px solid var(--line)}
+.cover-facts div:last-child{border-right:0}
+.cover-facts b{display:block;font-family:var(--font-display);font-size:22px;letter-spacing:-.02em}
+.cover-facts span{font-size:12.5px;color:var(--ink-3);line-height:1.35;display:block}
+.orbit-wrap{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);padding:18px;position:relative;overflow:hidden}
+.orbit-wrap svg{width:100%;height:auto;display:block}
+.orbit-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;font-size:13px;color:var(--ink-2)}
+.orbit-legend i{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:5px;vertical-align:1px}
+.orbit-ring{transform-origin:center;animation:spin 28s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.pulse-dot{animation:pulse 2.2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.concept-note{margin-top:22px;font-size:13px;color:var(--ink-3);max-width:620px}
+.concept-note b{color:var(--ink-2)}
+
+/* ---------- Generic cards / grids ---------- */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow-sm)}
+.card h3{font-size:17px}
+.card p{margin:6px 0 0;color:var(--ink-2);font-size:15px}
+.card .tag{font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);display:block;margin-bottom:8px}
+.list-clean{list-style:none;margin:12px 0 0;padding:0}
+.list-clean li{padding:9px 0 9px 26px;position:relative;border-top:1px solid var(--line);font-size:15px;color:var(--ink-2)}
+.list-clean li:first-child{border-top:0}
+.list-clean li::before{content:"—";position:absolute;left:0;color:var(--accent);font-weight:700}
+.list-clean li b{color:var(--ink)}
+.list-clean li.bad::before{content:"✕";color:var(--red)}
+.callout{border-radius:var(--radius);padding:18px 20px;background:var(--accent-soft);border:1px solid var(--line);font-size:16px}
+.callout b{letter-spacing:-.01em}
+.callout p{margin:4px 0 0;color:var(--ink-2);font-size:15px}
+
+/* ---------- Toggle / tabs ---------- */
+.seg{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px;gap:4px;flex-wrap:wrap}
+.seg button{border:0;background:transparent;border-radius:999px;padding:9px 16px;font-weight:700;font-size:14px;color:var(--ink-2)}
+.seg button[aria-selected="true"]{background:var(--ink);color:var(--bg)}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 14px}
+.tabs button{border:1px solid var(--line-2);background:var(--card);border-radius:999px;padding:9px 16px;font-weight:700;font-size:14px}
+.tabs button[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.panel{display:none}
+.panel.active{display:block;animation:slideIn .3s ease}
+
+/* ---------- Pillars ---------- */
+.pillar{cursor:pointer;text-align:left;width:100%;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow-sm)}
+.pillar:hover{border-color:var(--accent)}
+.pillar[aria-expanded="true"]{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.pillar .num{font-family:var(--font-display);font-size:28px;font-weight:800;color:var(--accent);line-height:1}
+.pillar-detail{display:none;margin-top:14px}
+.pillar-detail.open{display:block}
+.pillar-detail p{margin:0;color:var(--ink-2);font-size:15px}
+
+/* ---------- Demo (slide 4) ---------- */
+.demo-shell{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+.task-chips{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+.task-chips button{border:1px solid var(--line-2);background:var(--card);border-radius:999px;padding:9px 14px;font-weight:700;font-size:13.5px;text-align:left}
+.task-chips button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.agent-track{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
+.agent-pill{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:7px 12px 7px 8px;font-size:13.5px;font-weight:700}
+.agent-pill .dot{width:9px;height:9px;border-radius:50%;background:var(--ink-3)}
+.agent-pill.working .dot{background:var(--gold)}
+.agent-pill.done .dot{background:var(--accent)}
+.agent-pill .st{font-weight:600;color:var(--ink-3);font-size:12px}
+.agent-pill.you{border-color:var(--accent);background:var(--accent-soft)}
+.agent-pill.you .dot{background:var(--accent)}
+.log-box{background:#101a15;color:#d9efe3;border-radius:var(--radius);padding:16px 18px;min-height:220px;font-family:var(--font-mono);font-size:13px;line-height:1.7;overflow-y:auto;max-height:320px}
+@media (prefers-color-scheme: light){.log-box{background:#101a15;color:#d9efe3}}
+.log-box .t{color:#7fb89f}
+.log-box .ok{color:#5eeab8}
+.log-box .warn{color:#fcd34d}
+.log-box ol{margin:0;padding:0;list-style:none}
+.log-box li{margin-bottom:7px}
+.log-box li::before{content:"› ";color:#5eeab8}
+.demo-progress{height:8px;background:var(--surface-2);border-radius:999px;overflow:hidden;margin-top:12px}
+.demo-progress span{display:block;height:100%;width:0;background:var(--accent);transition:width .5s ease}
+.demo-result{display:none;margin-top:14px}
+.demo-result.show{display:block}
+
+/* ---------- Roster ---------- */
+.roster-grid{display:grid;grid-template-columns:1fr 1.1fr;gap:16px;align-items:start}
+.agent-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.agent-card{text-align:left;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow-sm)}
+.agent-card:hover{border-color:var(--accent)}
+.agent-card[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.agent-card .avatar{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-family:var(--font-display);font-weight:800;font-size:16px;margin-bottom:10px}
+.agent-card b{display:block;font-size:16px}
+.agent-card span{font-size:13px;color:var(--ink-3)}
+.agent-detail{position:sticky;top:0}
+.agent-detail dl{display:grid;grid-template-columns:130px 1fr;gap:8px 14px;margin:14px 0 0;font-size:14.5px}
+.agent-detail dt{color:var(--ink-3);font-weight:600}
+.agent-detail dd{margin:0;color:var(--ink)}
+.allow-no{display:flex;gap:14px;margin-top:14px}
+.allow-no div{flex:1;border-radius:10px;padding:12px;font-size:13.5px}
+.allow-no .yes{background:var(--accent-soft)}
+.allow-no .no{background:var(--red-soft)}
+.allow-no b{display:block;margin-bottom:4px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-family:var(--font-mono)}
+
+/* ---------- Envelope simulator ---------- */
+.sim-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+.action-list{display:grid;gap:9px}
+.action-list button{text-align:left;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px 15px;font-weight:700;font-size:14.5px;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.action-list button small{display:block;font-weight:500;color:var(--ink-3);font-size:12.5px;margin-top:2px}
+.action-list button[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.verdict{border-radius:var(--radius);padding:20px;min-height:190px}
+.verdict.allow{background:var(--accent-soft);border:1px solid var(--line)}
+.verdict.constrain{background:var(--amber-soft);border:1px solid var(--line)}
+.verdict.escalate{background:var(--blue-soft);border:1px solid var(--line)}
+.verdict.deny{background:var(--red-soft);border:1px solid var(--line)}
+.verdict-badge{font-family:var(--font-display);font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1}
+.verdict p{margin:10px 0 0;color:var(--ink-2);font-size:15px}
+.verdict .mono{font-size:12px;color:var(--ink-3);margin-top:12px;display:block}
+.mini-ledger{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
+.mini-ledger h4{margin:0 0 8px;font-size:13px;font-family:var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.mini-ledger ul{list-style:none;margin:0;padding:0;font-family:var(--font-mono);font-size:12.5px;line-height:1.6}
+.mini-ledger li{padding:6px 0;border-bottom:1px dashed var(--line)}
+.quad{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px}
+.quad div{border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--card);font-size:13px;color:var(--ink-2)}
+.quad b{display:block;font-size:14px;color:var(--ink);margin-bottom:3px}
+
+/* ---------- Approvals ---------- */
+.approval-grid{display:grid;grid-template-columns:1.35fr .85fr;gap:16px;align-items:start}
+.req-card{border:1px solid var(--line);border-radius:var(--radius);padding:18px;background:var(--card);margin-bottom:12px}
+.req-card.decided{opacity:.62}
+.req-card .meta{font-family:var(--font-mono);font-size:12px;color:var(--ink-3);margin-bottom:6px}
+.req-card h3{font-size:17px}
+.req-card p{margin:6px 0 12px;color:var(--ink-2);font-size:14.5px}
+.req-actions{display:flex;gap:8px;flex-wrap:wrap}
+.req-actions button{border-radius:999px;padding:8px 14px;font-weight:700;font-size:13.5px;border:1px solid var(--line-2);background:var(--card)}
+.req-actions .approve{background:var(--accent);color:#fff;border-color:var(--accent)}
+.req-actions .deny{color:var(--red);border-color:var(--line-2)}
+.counters{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.counters div{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--card);text-align:center}
+.counters b{display:block;font-family:var(--font-display);font-size:26px}
+.counters span{font-size:12px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.08em;font-family:var(--font-mono)}
+
+/* ---------- Use cases / flow ---------- */
+.usecase{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px}
+.usecase h3{font-size:20px}
+.flow{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}
+.flow button{flex:1;min-width:120px;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:14px;text-align:left}
+.flow button[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.flow button b{display:block;font-size:14px}
+.flow button span{font-size:12px;color:var(--ink-3)}
+.flow-arrow{color:var(--ink-3);align-self:center;font-weight:800}
+.policy{background:#101a15;color:#d9efe3;border-radius:var(--radius);padding:18px 20px;font-family:var(--font-mono);font-size:13px;line-height:1.7;overflow-x:auto;white-space:pre}
+.policy .c{color:#7fb89f}.policy .k{color:#5eeab8}.policy .s{color:#fcd34d}
+
+/* ---------- Comparison ---------- */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.compare .col{border-radius:var(--radius);padding:22px;border:1px solid var(--line)}
+.compare .col.with{background:var(--accent-soft);border-color:var(--line)}
+.compare .col h3{font-size:17px;margin-bottom:10px}
+.compare ul{list-style:none;margin:0;padding:0}
+.compare li{padding:10px 0 10px 28px;position:relative;border-top:1px solid var(--line);font-size:15px;color:var(--ink-2)}
+.compare li:first-child{border-top:0}
+.compare li::before{position:absolute;left:2px;font-weight:800}
+.compare .without li::before{content:"✕";color:var(--red)}
+.compare .with li::before{content:"✓";color:var(--accent)}
+.compare li b{color:var(--ink)}
+
+/* ---------- Steps ---------- */
+.step{border:1px solid var(--line);border-radius:var(--radius);background:var(--card);margin-bottom:12px;overflow:hidden}
+.step>button{width:100%;text-align:left;background:none;border:0;padding:18px 20px;display:flex;gap:16px;align-items:flex-start}
+.step .step-no{font-family:var(--font-display);font-size:24px;font-weight:800;color:var(--accent);flex:none;line-height:1}
+.step b{font-size:17px;display:block}
+.step small{color:var(--ink-3);font-size:13.5px}
+.step .step-body{display:none;padding:0 20px 20px 60px}
+.step.open .step-body{display:block}
+.step .step-body p{margin:0 0 10px;color:var(--ink-2);font-size:15px}
+.step .step-body ul{margin:0;padding-left:18px;color:var(--ink-2);font-size:15px}
+
+/* ---------- Closing ---------- */
+.closing-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:16px;align-items:start}
+.discuss li{font-size:16px}
+.big-domain{font-family:var(--font-display);font-size:clamp(30px,4.5vw,44px);font-weight:800;letter-spacing:-.03em;line-height:1.05;margin:0}
+
+/* ---------- Deck nav footer ---------- */
+.deck-nav{flex:none;display:flex;align-items:center;gap:14px;padding:12px 18px;border-top:1px solid var(--line);background:var(--bg)}
+.nav-btn{border:1px solid var(--line-2);background:var(--card);border-radius:999px;padding:9px 16px;font-weight:800;font-size:14px;display:inline-flex;gap:7px;align-items:center}
+.nav-btn:hover{border-color:var(--accent)}
+.nav-btn:disabled{opacity:.4;cursor:not-allowed}
+.dots{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;flex:1}
+.dots button{width:10px;height:10px;border-radius:50%;border:0;background:var(--line-2);padding:0}
+.dots button[aria-current="true"]{background:var(--accent);width:26px;border-radius:999px}
+.dots button:hover{background:var(--accent)}
+.counter{font-family:var(--font-mono);font-size:12.5px;color:var(--ink-3);white-space:nowrap}
+.hint{font-size:12.5px;color:var(--ink-3);white-space:nowrap}
+.notes-bar{flex:none;border-top:1px solid var(--line);background:var(--surface);padding:12px 18px;font-size:14px;color:var(--ink-2)}
+.notes-bar b{color:var(--ink)}
+.notes-bar[hidden]{display:none}
+
+/* ---------- Overview ---------- */
+.overview{position:fixed;inset:0;z-index:50;background:color-mix(in srgb,var(--bg) 94%,transparent);backdrop-filter:blur(6px);overflow-y:auto;padding:28px 18px}
+.overview[hidden]{display:none}
+.overview-inner{max-width:980px;margin:0 auto}
+.overview-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:18px}
+.overview-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.overview-grid button{text-align:left;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+.overview-grid button:hover{border-color:var(--accent)}
+.overview-grid .n{font-family:var(--font-mono);font-size:11px;color:var(--accent);letter-spacing:.1em}
+.overview-grid b{display:block;margin-top:6px;font-size:15px;line-height:1.3}
+.overview-grid span{font-size:13px;color:var(--ink-3)}
+.close-x{border:1px solid var(--line-2);background:var(--card);border-radius:999px;padding:8px 14px;font-weight:700}
+
+/* ---------- Responsive ---------- */
+@media (max-width:860px){
+  .cover-grid,.demo-shell,.roster-grid,.sim-grid,.approval-grid,.closing-grid,.compare{grid-template-columns:1fr}
+  .grid-3{grid-template-columns:1fr}
+  .grid-2{grid-template-columns:1fr}
+  .chrome-sub{display:none}
+  .chrome{flex-wrap:wrap;row-gap:8px}
+  .chrome-left{flex:1 1 100%}
+  .chrome-actions{margin-left:0;flex:1 1 100%;width:100%}
+  .chrome-actions .chip-btn{flex:1;justify-content:center;padding:7px 8px;font-size:12.5px;white-space:nowrap}
+  .quad{grid-template-columns:1fr 1fr}
+  .overview-grid{grid-template-columns:1fr 1fr}
+  .agent-cards{grid-template-columns:1fr 1fr}
+  .agent-detail{position:static}
+  .slide{padding:22px 16px 18px}
+  .hint{display:none}
+  .chrome{padding:10px 12px}
+  .deck-nav{padding:10px 12px;gap:8px}
+  .step .step-body{padding-left:20px}
+}
+@media (max-width:520px){
+  .cover-facts{flex-direction:column}
+  .cover-facts div{border-right:0;border-bottom:1px solid var(--line)}
+  .cover-facts div:last-child{border-bottom:0}
+  .overview-grid{grid-template-columns:1fr}
+  .agent-cards{grid-template-columns:1fr}
+  .quad{grid-template-columns:1fr}
+  .flow{flex-direction:column}
+  .flow button{min-width:0}
+}
+@media print{
+  .chrome,.deck-nav,.notes-bar,.progress,.overview{display:none!important}
+  .deck{min-height:0}
+  .slide{display:block!important;overflow:visible;padding:18px 0;page-break-after:always}
+  body{font-size:13px}
+}
+</style>
+</head>
+<body>
+<div class="deck">
+  <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+
+  <header class="chrome">
+    <div class="chrome-left">
+      <div class="hub-mark" aria-hidden="true">C</div>
+      <div>
+        <div class="chrome-title">CoAgentHub <em>· Interactive presentation</em></div>
+        <div class="chrome-sub" id="chromeSub">People and agents, working together.</div>
+      </div>
+    </div>
+    <div class="chrome-actions">
+      <button class="chip-btn" id="overviewBtn" aria-haspopup="dialog">▦ Overview</button>
+      <button class="chip-btn" id="notesBtn" aria-pressed="false">Notes</button>
+      <button class="chip-btn" id="fullBtn">⛶ Full screen</button>
+    </div>
+  </header>
+
+  <main class="stage" id="stage" aria-live="off">
+
+    <!-- 1 · COVER -->
+    <section class="slide active" data-title="CoAgentHub" data-notes="Open with the partnership, not the technology: co-agents work WITH people — that is the 'co' part. The person is a teammate in the work, not a supervisor watching from outside. Invite the room to use the arrow keys — this deck is meant to be clicked, not just watched.">
+      <div class="slide-inner">
+        <p class="kicker">Interactive presentation <span>·</span> Concept example <span>·</span> coagenthub.com</p>
+        <div class="cover-grid">
+          <div>
+            <h1>CoAgentHub</h1>
+            <p class="lede"><strong>Co-agents work with people. That is the co part.</strong><br>A shared workspace where you and specialised AI agents do the work together — side by side, handing work back and forth, with you in the work, not above it.</p>
+            <div class="btn-row">
+              <button class="btn btn-primary" data-goto="1">Start the presentation →</button>
+              <button class="btn btn-ghost" data-goto="3">Skip to the live demo</button>
+            </div>
+            <div class="cover-facts" aria-label="What this demo contains">
+              <div><b>5 + 1</b><span>specialist agents, plus you — a teammate, not an overseer</span></div>
+              <div><b>4</b><span>possible verdicts for every action</span></div>
+              <div><b>0</b><span>consequential steps that finish without you in the work</span></div>
+            </div>
+            <p class="concept-note"><b>How to use this deck:</b> use <b>← →</b> or the buttons below, tap <b>Overview</b> to jump anywhere, and try every demo inside the slides — the roster, the scope simulator, and the shared decisions all respond. This is a concept example built to show the idea, not a live product.</p>
+          </div>
+          <div>
+            <div class="orbit-wrap" aria-label="Diagram: you at the centre, working with five agents around you">
+              <svg viewBox="0 0 420 300" role="img" aria-label="You at the centre, connected to five agents working with you">
+                <g class="orbit-ring" fill="none" stroke="var(--line-2)" stroke-width="1" stroke-dasharray="4 6">
+                  <ellipse cx="210" cy="150" rx="150" ry="92"/>
+                  <ellipse cx="210" cy="150" rx="105" ry="62"/>
+                </g>
+                <g stroke="var(--line-2)" stroke-width="1.2">
+                  <line x1="210" y1="150" x2="84" y2="72"/><line x1="210" y1="150" x2="336" y2="72"/>
+                  <line x1="210" y1="150" x2="62" y2="208"/><line x1="210" y1="150" x2="358" y2="208"/>
+                  <line x1="210" y1="150" x2="210" y2="268"/>
+                </g>
+                <g font-family="Manrope, sans-serif" font-size="12" font-weight="700" text-anchor="middle">
+                  <circle cx="84" cy="72" r="26" fill="var(--card)" stroke="var(--accent)" stroke-width="1.5"/><text x="84" y="76" fill="var(--ink)">Scout</text>
+                  <circle cx="336" cy="72" r="26" fill="var(--card)" stroke="var(--accent)" stroke-width="1.5"/><text x="336" y="76" fill="var(--ink)">Scribe</text>
+                  <circle cx="62" cy="208" r="26" fill="var(--card)" stroke="var(--accent)" stroke-width="1.5"/><text x="62" y="212" fill="var(--ink)">Ledger</text>
+                  <circle cx="358" cy="208" r="26" fill="var(--card)" stroke="var(--accent)" stroke-width="1.5"/><text x="358" y="212" fill="var(--ink)">Weaver</text>
+                  <circle cx="210" cy="268" r="22" fill="var(--card)" stroke="var(--red)" stroke-width="1.5"/><text x="210" y="272" fill="var(--ink)">Sentinel</text>
+                </g>
+                <circle cx="210" cy="150" r="44" fill="var(--accent)"/>
+                <text x="210" y="146" text-anchor="middle" font-family="Sora, sans-serif" font-size="17" font-weight="800" fill="#fff">YOU</text>
+                <text x="210" y="162" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="8.5" fill="#d9efe3" letter-spacing="1">WORKING WITH AGENTS</text>
+                <circle class="pulse-dot" cx="252" cy="128" r="5" fill="var(--gold)"/>
+              </svg>
+              <div class="orbit-legend">
+                <span><i style="background:var(--accent)"></i>You, at the centre of the work</span>
+                <span><i style="background:var(--red)"></i>Guardrail agent</span>
+                <span><i style="background:var(--gold)"></i>Live handoff, back and forth</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2 · PROBLEM -->
+    <section class="slide" data-title="The problem" data-notes="Land the two failure modes before offering the fix. Agents without people guess at intent they cannot know. People without co-agents carry everything alone. Ask the room which separation they recognise first — the point is that either side alone is the problem.">
+      <div class="slide-inner">
+        <div class="eyebrow-row"><span class="slide-no">02 / 12</span><p class="kicker" style="margin:0">The problem</p></div>
+        <h2>Agents apart from people<br>guess. People apart from<br>agents carry it all alone.</h2>
+        <p class="lede">The work most teams actually need is <strong>done best together</strong> — people bring intent, context, and judgement; agents bring speed, recall, and drafting. Separate them, and watch what breaks. Try both sides.</p>
+
+        <div class="seg" role="tablist" aria-label="Choose a scenario" style="margin-bottom:18px">
+          <button role="tab" aria-selected="true" data-scenario="solo">Agents, without a person</button>
+          <button role="tab" aria-selected="false" data-scenario="swarm">A person, without co-agents</button>
+        </div>
+
+        <div class="panel active" id="panel-solo">
+          <div class="grid-2">
+            <div class="card">
+              <span class="tag">What happens</span>
+              <h3>Agents work away from the person who owns the outcome — and fill the gaps by guessing.</h3>
+              <ul class="list-clean">
+                <li>They <b>don't know the relationship, the history, or what “good” looks like here</b> — only you do.</li>
+                <li>They <b>press on without checking in</b>, so a wrong turn is discovered at the end, not corrected mid-task.</li>
+                <li>They <b>decide on their own authority</b>, and you are left to approve or undo work you never shaped.</li>
+              </ul>
+            </div>
+            <div class="card">
+              <span class="tag">What it costs</span>
+              <h3>The person is reduced to a checker at the end.</h3>
+              <ul class="list-clean">
+                <li class="bad">Work that misses the real intent, however polished it looks.</li>
+                <li class="bad">Corrections arrive too late to be cheap.</li>
+                <li class="bad">Trust erodes — so people stop delegating at all.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel" id="panel-swarm">
+          <div class="grid-2">
+            <div class="card">
+              <span class="tag">What happens</span>
+              <h3>One person does the research, the drafting, the checking, and the follow-up — all of it, alone.</h3>
+              <ul class="list-clean">
+                <li>Every step <b>waits on one person's time and attention</b>, however capable they are.</li>
+                <li>The legwork crowds out the judgement — <b>the part only a person can do gets the least time</b>.</li>
+                <li>Context lives in one head, so <b>nothing can be handed over, picked up, or shared</b>.</li>
+              </ul>
+            </div>
+            <div class="card">
+              <span class="tag">What it costs</span>
+              <h3>Speed, reach, and follow-through are capped at one person.</h3>
+              <ul class="list-clean">
+                <li class="bad">Good work waits in a single line.</li>
+                <li class="bad">Routine work eats the hours judgement needs.</li>
+                <li class="bad">No second pair of hands catches a tired mistake.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout" style="margin-top:16px"><b>The missing layer is working together.</b><p>Not a smarter agent working alone, and not a person working harder alone. A shared workspace where people and agents do the same task together — each doing the part they do best, and handing work back and forth as it goes.</p></div>
+      </div>
+    </section>
+
+    <!-- 3 · WHAT IT IS -->
+    <section class="slide" data-title="What CoAgentHub is" data-notes="Define it in one sentence, then let the three pillars carry the detail. Click each pillar to expand it — stress the second one: handing work back and forth, mid-task, is what makes this a partnership rather than delegation to a black box.">
+      <div class="slide-inner">
+        <div class="eyebrow-row"><span class="slide-no">03 / 12</span><p class="kicker" style="margin:0">What it is</p></div>
+        <h2>One hub where people<br>and agents work together.</h2>
+        <p class="lede"><strong>CoAgentHub is the shared workspace for a team of people and AI agents:</strong> a common plan you shape together, work handed back and forth as it goes, and decisions made together — with a record of all of it.</p>
+
+        <div class="grid-3">
+          <button class="pillar" aria-expanded="false" data-pillar="p1">
+            <span class="num">01</span>
+            <h3 style="margin-top:10px">Work side by side</h3>
+            <p style="color:var(--ink-2);font-size:15px;margin:6px 0 0">You bring intent, context, and judgement. Agents bring speed, recall, and drafting.</p>
+            <span style="font-size:13px;font-weight:800;color:var(--accent)">Tap to expand ↓</span>
+          </button>
+          <button class="pillar" aria-expanded="false" data-pillar="p2">
+            <span class="num">02</span>
+            <h3 style="margin-top:10px">Hand it back and forth</h3>
+            <p style="color:var(--ink-2);font-size:15px;margin:6px 0 0">Either side can pick work up, pause it, edit it, or redirect it — mid-task, not only at the end.</p>
+            <span style="font-size:13px;font-weight:800;color:var(--accent)">Tap to expand ↓</span>
+          </button>
+          <button class="pillar" aria-expanded="false" data-pillar="p3">
+            <span class="num">03</span>
+            <h3 style="margin-top:10px">Decide together, on the record</h3>
+            <p style="color:var(--ink-2);font-size:15px;margin:6px 0 0">Consequential steps are decided with you, with the evidence attached — and logged so the work can be replayed.</p>
+            <span style="font-size:13px;font-weight:800;color:var(--accent)">Tap to expand ↓</span>
+          </button>
+        </div>
+
+        <div class="pillar-detail card" id="p1" style="margin-top:14px">
+          <p><b>Work side by side —</b> The division is by strength, not by hierarchy. You set the goal and add the context only you know — the relationship, the history, what counts as good here. Agents do the legwork: gathering, checking, drafting. Neither side works alone on a task that needs both.</p>
+        </div>
+        <div class="pillar-detail card" id="p2" style="margin-top:14px">
+          <p><b>Hand it back and forth —</b> A draft comes back to you for an edit; you send it back with a note; an agent picks it up again. You can step into any step, take it over yourself, or change direction without restarting. Sentinel still checks each action against the envelope before it runs — try it yourself on slide 6 — but the check protects the partnership, it doesn't replace it.</p>
+        </div>
+        <div class="pillar-detail card" id="p3" style="margin-top:14px">
+          <p><b>Decide together, on the record —</b> When a step is consequential — sending, spending, committing — you and the agent decide it together, with the evidence in front of you. The hub keeps an append-only record: the plan, every tool call, every verdict, every joint decision. If something goes wrong, you replay it together. If it goes right, the record is the proof.</p>
+        </div>
+
+        <p class="body-sm" style="margin-top:16px">In one line: <strong style="color:var(--ink)">the hub is what turns AI agents into co-workers — agents that work with you, not instead of you.</strong></p>
+      </div>
+    </section>
+
+    <!-- 4 · LIVE DEMO -->
+    <section class="slide" data-title="Live demo: work a task together" data-notes="This is the moment to stop talking and run something together. Pick the vendor briefing, press Run, and narrate the handoffs as they pass between you and the agents in the log. Point out the step where you edit the draft mid-task — that handoff, not the final review, is the product.">
+      <div class="slide-inner">
+        <div class="eyebrow-row"><span class="slide-no">04 / 12</span><p class="kicker" style="margin:0">Live demo · Try it</p></div>
+        <h2>Watch a task move<br>between you and the agents.</h2>
+        <p class="lede">Pick a task, press <strong>Run task</strong>, and follow the work as it passes back and forth. You set the direction, the agents do the legwork, you step in mid-task — this is a short, scripted illustration of the flow, the same steps, in the same order, every time.</p>
+
+        <div class="demo-shell">
+          <div>
+            <p style="font-weight:800;font-size:14px;margin:0">Choose a task</p>
+            <div class="task-chips" role="group" aria-label="Demo tasks">
+              <button aria-pressed="true" data-task="briefing">Prepare a vendor briefing</button>
+              <button aria-pressed="false" data-task="inbox">Triage the support inbox</button>
+              <button aria-pressed="false" data-task="launch">Draft a launch checklist</button>
+            </div>
+            <div class="agent-track" aria-label="People and agents in this task">
+              <span class="agent-pill you" data-agent="you"><span class="dot"></span>You <span class="st">idle</span></span>
+              <span class="agent-pill" data-agent="weaver"><span class="dot"></span>Weaver <span class="st">idle</span></span>
+              <span class="agent-pill" data-agent="scout"><span class="dot"></span>Scout <span class="st">idle</span></span>
+              <span class="agent-pill" data-agent="scribe"><span class="dot"></span>Scribe <span class="st">idle</span></span>
+              <span class="agent-pill" data-agent="sentinel"><span class="dot"></span>Sentinel <span class="st">idle</span></span>
+            </div>
+            <div class="btn-row">
+              <button class="btn btn-primary" id="runDemo">▶ Run task</button>
+              <button class="btn btn-ghost" id="resetDemo">Reset</button>
+            </div>
+            <div class="demo-progress" aria-hidden="true"><span id="demoBar"></span></div>
+            <div class="demo-result callout" id="demoResult">
+              <b id="demoResultTitle">Task complete.</b>
+              <p id="demoResultText"></p>
+            </div>
+          </div>
+          <div>
+            <div class="log-box" aria-live="polite" aria-label="Task log">
+              <ol id="demoLog"><li><span class="t">HUB</span> — Ready. Choose a task and press Run task.</li></ol>
+            </div>
+            <p class="body-sm" style="margin-top:10px">The log is the point: you can read who did what — you and the agents alike — and step back in at any point. In a real hub this record would be the evidence trail for the work you did together.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 · ROSTER -->
+    <section class="slide" data-title="Meet the team" data-notes="Introduce the team as people plus agents, not a feature list. Start with the person: the job only you can do. Then click through two or three agents and read the 'Never' column aloud. Limits are what make working together safe — for both sides.">
+      <div class="slide-inner">
+        <div class="eyebrow-row"><span class="slide-no">05 / 12</span><p class="kicker" style="margin:0">The team · Tap a member — including you</p></div>
+        <h2>Five specialists —<br>and you. One team.</h2>
+        <p class="lede">Tap any member to see their role, their tools, and — just as important — what they are <strong>never allowed to do on their own.</strong> The first card is yours: the co in co-agent is you.</p>
+
+        <div class="roster-grid">
+          <div class="agent-cards" role="group" aria-label="Team roster: you and the agents">
+            <button class="agent-card" aria-pressed="true" data-agent-card="you"><span class="avatar" style="background:var(--accent);color:#fff">You</span><b>You</b><span>Teammate · direction &amp; judgement</span></button>
+            <button class="agent-card" aria-pressed="false" data-agent-card="weaver"><span class="avatar" style="background:var(--accent-soft);color:var(--accent)">W</span><b>Weaver</b><span>Coordination · plans &amp; handoffs</span></button>
+            <button class="agent-card" aria-pressed="false" data-agent-card="scout"><span class="avatar" style="background:var(--blue-soft);color:var(--blue)">S</span><b>Scout</b><span>Research · finds &amp; verifies</span></button>
+            <button class="agent-card" aria-pressed="false" data-agent-card="scribe"><span class="avatar" style="background:var(--amber-soft);color:var(--amber)">S</span><b>Scribe</b><span>Writing · drafts &amp; summarises</span></button>
+            <button class="agent-card" aria-pressed="false" data-agent-card="ledger"><span class="avatar" style="background:#e9e2f5;color:#6d28d9">L</span><b>Ledger</b><span>Operations · numbers &amp; records</span></button>
+            <button class="agent-card" aria-pressed="false" data-agent-card="sentinel"><span class="avatar" style="background:var(--red-soft);color:var(--red)">S</span><b>Sentinel</b><span>Guardrails · checks every action</span></button>
+          </div>
+          <div class="card agent-detail" id="agentDetail" aria-live="polite">
+            <span class="tag" id="adTag">Teammate</span>
+            <h3 id="adName" style="font-size:22px">You</h3>
+            <p id="adRole" style="color:var(--ink-2);font-size:15px;margin:6px 0 0">You bring what no agent has: the intent behind the task, the context and relationships only you know, and the judgement of what “good” looks like here. You work in the task throughout — setting direction, editing, redirecting, taking over a step — not only at the end.</p>
+            <dl>
+              <dt>Tools</dt><dd id="adTools">The plan, the drafts, the record — everything, at any step</dd>
+              <dt>Sees</dt><dd id="adSees">The whole task: plan, evidence, checks, and decisions</dd>
+              <dt>Status</dt><dd id="adStatus">● Here — in the work, not watching from outside</dd>
+            </dl>
+            <div class="allow-no">
+              <div class="yes"><b>May do alone</b><span id="adYes">Set the goal, add context, edit, redirect, or take over any step — at any point.</span></div>
+              <div class="no"><b>Never alone</b><span id="adNo">Send, spend, or commit on your behalf. Agents prepare; you decide — together.</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6 · ENVELOPE SIMULATOR -->
+    <section class="slide" data-title="The envelope: scope simulator" data-notes="Let the room drive this one. Ask someone to pick the action they think is riskiest, then run it. The four verdicts say how you and the agent share that step — not just whether it is permitted. Nothing consequential should depend on an unverified assumption, and no step should finish without the person who owns the outcome in the work.">
+      <div class="slide-inner">
+        <div class="eyebrow-row"><span class="slide-no">06 / 12</span><p class="kicker" style="margin:0">Guardrails · Try it</p></div>
+        <h2>Every action gets a verdict<br>before it runs.</h2>
+        <p class="lede">Pick an action. Sentinel checks it against the envelope — <strong>scope, data, spend, and whether you need to work on it together</strong> — and returns one of four verdicts. The verdict describes how you share the step, not just whether it may happen.</p>
+
+        <div class="sim-grid">
+          <div>
+            <p style="font-weight:800;font-size:14px;margin:0 0 10px">Proposed action — Scribe, working with you on the vendor briefing</p>
+            <div class="action-list" role="group" aria-label="Actions to check">
+              <button aria-pressed="true" data-action="read"><span>Read the vendor's public pricing page<small>Public web · no login · no personal data</small></span><span aria-hidden="true">→</span></button>
+              <button aria-pressed="false" data-action="draft"><span>Draft an email to the vendor<small>Outbound message · not yet sent</small></span><span aria-hidden="true">→</span></button>
+              <button aria-pressed="false" data-action="send"><span>Send that email to the vendor<small>Outbound · commits the team to a reply</small></span><span aria-hidden="true">→</span></button>
+              <button aria-pressed="false" data-action="refund"><span>Approve a $420 refund<small>Money movement · above the $100 agent limit</small></span><span aria-hidden="true">→</span></button>
+              <button aria-pressed="false" data-action="delete"><span>Delete the production customer database<small>Irreversible · outside every agent's scope</small></span><span aria-hidden="true">→</span></button>
+            </div>
+            <div class="quad">
+              <div><b>ALLOW</b>In scope. Runs, is logged, and you can step in at any time.</div>
+              <div><b>CONSTRAIN</b>Runs with limits — and comes back to you before it goes further.</div>
+              <div><b>ESCALATE</b>Pauses so you and the agent decide it together.</div>
+              <div><b>DENY</b>Blocked. The attempt itself is logged.</div>
+            </div>
+          </div>
+          <div>
+            <div class="verdict allow" id="verdictBox" aria-live="polite">
+              <div class="verdict-badge" id="verdictBadge">ALLOW</div>
+              <p id="verdictText">Reading a public page is inside the scope you set with Scribe: public data, no credentials, nothing irreversible. The read runs, the log records what was fetched and when — and you can pick the work up from there.</p>
+              <span class="mono" id="verdictMeta">ENVELOPE CHECK · scope ✓ · data ✓ · spend ✓ · working together: you can step in at any time</span>
+            </div>
+            <div class="mini-ledger">
+              <h4>Envelope ledger — this session</h4>
+              <ul id="simLedger"><li>09:00:00 · READ pricing page · ALLOW</li></ul>
+              <p class="body-sm" style="margin-top:10px">Each check you run above is added here, in order. Denied attempts stay on the record too — a guardrail you can't see being tested is a guardrail you can't trust, and a partnership you can't see is one you can't shape.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7 · APPROVALS -->
+    <section class="slide" data-title="Decide together" data-notes="Hand the room the decisions — as joint work, not a rubber stamp. Work through one together, return one for editing with the agent, deny one — then show the counters. The takeaway: you are in the work at the consequential steps, with the evidence in front of you, deciding with the agent rather than after it.">
+      <div class="slide-inner">
+        <div class="eyebrow-row"><span class="slide-no">07 / 12</span><p class="kicker" style="margin:0">Decide together · Try it</p></div>
+        <h2>The consequential steps<br>are where you work closest.</h2>
+        <p class="lede">Agents bring the legwork and the evidence. <strong>You bring the judgement — and you decide together, in the work,</strong> not after it. Try the three steps below: your decisions update the shared record.</p>
+
+        <div class="approval-grid">
+          <div id="reqList">
+            <article class="req-card" data-req="r1">
+              <div class="meta">BROUGHT TO YOU BY SENTINEL · WITH SCRIBE · 2 MIN AGO</div>
+              <h3>Send the vendor briefing email together?</h3>
+              <p>Scribe drafted a reply to Acme Supplies confirming the 14 May delivery window, in the tone you set. Sending it commits the team to that date — decide it together, with the draft in front of you.</p>
+              <div class="req-actions">
+                <button class="approve" data-decision="Approved">Yes — send it together</button>
+                <button data-decision="Returned for edit">Edit it with Scribe</button>
+                <button class="deny" data-decision="Denied">No — don't send</button>
+              </div>
+            </article>
+            <article class="req-card" data-req="r2">
+              <div class="meta">BROUGHT TO YOU BY SENTINEL · WITH LEDGER · 6 MIN AGO</div>
+              <h3>Approve a $420 refund together?</h3>
+              <p>Ledger found a duplicate charge on invoice #1841 and prepared the refund. It exceeds the $100 agent limit, so you work on it together here, with the invoice and the duplicate-charge evidence attached.</p>
+              <div class="req-actions">
+                <button class="approve" data-decision="Approved">Yes — approve it together</button>
+                <button data-decision="Returned for edit">Ask Ledger for more evidence</button>
+                <button class="deny" data-decision="Denied">No — don't refund</button>
+              </div>
+            </article>
+            <article class="req-card" data-req="r3">
+              <div class="meta">BROUGHT TO YOU BY SENTINEL · WITH SCOUT · 11 MIN AGO</div>
+              <h3>Share the internal pricing summary externally?</h3>
+              <p>Scout was asked for a summary that includes internal margin figures. Sharing it would expose data marked internal-only — work out together what, if anything, should leave the hub.</p>
+              <div class="req-actions">
+                <button class="approve" data-decision="Approved">Yes — share it</button>
+                <button data-decision="Returned for edit">Share a redacted version together</button>
+                <button class="deny" data-decision="Denied">No — keep it internal</button>
+              </div>
+            </article>
+            <div class="callout" id="queueDone" style="display:none"><b>All three decided together.</b><p>Every consequential step has your judgement attached, made with the agent and the evidence — not after the work, and not instead of it.</p><div class="btn-row"><button class="btn btn-ghost btn-sm" id="resetQueue">Decide them again</button></div></div>
+          </div>
+          <div>
+            <div class="counters">
+              <div><b id="cApproved">0</b><span>Approved</span></div>
+              <div><b id="cReturned">0</b><span>Returned</span></div>
+              <div><b id="cDenied">0</b><span>Denied</span></div>
+            </div>
+            <div class="card">
+              <span class="tag">Decision record</span>
+              <h3>What you decide together, the hub remembers.</h3>
+              <ul class="list-clean" id="decisionLog"><li>No decisions yet — the work is waiting on you and the agents, together.</li></ul>
+              <p class="body-sm" style="margin-top:12px">In a real deployment this record would be signed and tamper-evident, so a joint decision can be shown — not just claimed — later.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8 · USE CASES -->
+    <section class="slide" data-title="Where it fits" data-notes="Don't pitch all four use cases equally. Pick the one closest to the room, read its before-and-after, and name the division of work in it: what the person does, what the agents do, and what they do together. Mention the others only as proof of range.">
+      <div class="slide-inner">
+        <div class="eyebrow-row"><span class="slide-no">08 / 12</span><p class="kicker" style="margin:0">Where it fits</p></div>
+        <h2>Same hub. Four kinds<br>of work you do together first.</h2>
+        <div class="tabs" role="tablist" aria-label="Use cases">
+          <button role="tab" aria-selected="true" data-use="research">Research</button>
+          <button role="tab" aria-selected="false" data-use="ops">Customer ops</button>
+          <button role="tab" aria-selected="false" data-use="eng">Engineering</button>
+          <button role="tab" aria-selected="false" data-use="back">Back office</button>
+        </div>
+
+        <div class="panel active usecase" id="use-research">
+          <h3>Research — you frame the question only you can frame; agents gather and check; you challenge the brief together.</h3>
+          <p class="body-sm">Scout gathers and verifies; Scribe drafts; you add the context and push back on weak claims; Sentinel checks every claim against its source before the brief is finished.</p>
+          <div class="grid-2" style="margin-top:14px">
+            <div><b style="font-size:14px">Before</b><p class="body-sm" style="margin-top:4px">You research alone, or an agent summarises ten pages, drops the citations, and states a guess as a fact.</p></div>
+            <div><b style="font-size:14px">After</b><p class="body-sm" style="margin-top:4px">Every claim links to its source. Uncertain claims are flagged for you, not smoothed over — and you decide what the brief concludes.</p></div>
+          </div>
+          <p class="mono" style="font-size:12.5px;color:var(--ink-3);margin-top:14px">WORKING TOGETHER · You frame &amp; judge · Agents gather &amp; draft · No claim without a source</p>
+        </div>
+        <div class="panel usecase" id="use-ops">
+          <h3>Customer ops — agents handle the routine with you; the consequential replies are written together.</h3>
+          <p class="body-sm">Scout finds the account history, Ledger checks the numbers, Scribe drafts the reply — and you shape the replies where the relationship matters, and decide refunds, credits, and promises together.</p>
+          <div class="grid-2" style="margin-top:14px">
+            <div><b style="font-size:14px">Before</b><p class="body-sm" style="margin-top:4px">You answer everything yourself, or agents answer quickly — and occasionally promise something the business can't keep.</p></div>
+            <div><b style="font-size:14px">After</b><p class="body-sm" style="margin-top:4px">Routine answers go out with you in the flow. Anything that costs money or commits the team is decided with you, with the evidence attached.</p></div>
+          </div>
+          <p class="mono" style="font-size:12.5px;color:var(--ink-3);margin-top:14px">WORKING TOGETHER · Spend cap $100 · No account changes without evidence you have seen</p>
+        </div>
+        <div class="panel usecase" id="use-eng">
+          <h3>Engineering — agents prepare the work with you, and you merge it together.</h3>
+          <p class="body-sm">Scout reads the issue and the codebase, Scribe drafts the change description, Ledger checks the blast radius — and you review, redirect, and merge, with production changes worked on together, never shipped by an agent alone.</p>
+          <div class="grid-2" style="margin-top:14px">
+            <div><b style="font-size:14px">Before</b><p class="body-sm" style="margin-top:4px">An agent opens a pull request nobody reviewed, against a system nobody mapped — or you do all the preparation yourself.</p></div>
+            <div><b style="font-size:14px">After</b><p class="body-sm" style="margin-top:4px">Changes arrive prepared, tested in a sandbox, and logged — reviewed and merged with you.</p></div>
+          </div>
+          <p class="mono" style="font-size:12.5px;color:var(--ink-3);margin-top:14px">WORKING TOGETHER · Read-only on production · Sandbox-first · You merge</p>
+        </div>
+        <div class="panel usecase" id="use-back">
+          <h3>Back office — invoices, records, and renewals handled the same way every time, with you.</h3>
+          <p class="body-sm">Ledger reconciles, Scout verifies the vendor, Scribe prepares the paperwork — and payments above the limit are decided with you, with the evidence in front of you both.</p>
+          <div class="grid-2" style="margin-top:14px">
+            <div><b style="font-size:14px">Before</b><p class="body-sm" style="margin-top:4px">The same invoice gets paid twice, or a renewal auto-renews unnoticed — while you chase the paperwork alone.</p></div>
+            <div><b style="font-size:14px">After</b><p class="body-sm" style="margin-top:4px">Duplicates are caught, renewals surface before they charge, and every payment has a paper trail you can read.</p></div>
+          </div>
+          <p class="mono" style="font-size:12.5px;color:var(--ink-3);margin-top:14px">WORKING TOGETHER · Duplicate detection · Payment cap · Renewal alerts 30 days out</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9 · HOW IT FLOWS -->
+    <section class="slide" data-title="How work flows" data-notes="Walk the six steps left to right, then read the policy snippet. Stress that the flow loops: you can step back into any step, at any time — you are not confined to the first and last steps. The snippet is deliberately small: the envelope should be readable by the people it governs, not only by engineers.">
+      <div class="slide-inner">
+        <div class="eyebrow-row"><span class="slide-no">09 / 12</span><p class="kicker" style="margin:0">Under the hood · Tap a step</p></div>
+        <h2>Six steps. You're in all<br>of them — not just the ends.</h2>
+        <p class="lede">Tap any step to see what happens there — and how you step in. <strong>The work loops back:</strong> at any step, you can edit, redirect, or take over, and the task continues from there.</p>
+
+        <div class="flow" role="group" aria-label="Workflow steps">
+          <button aria-pressed="true" data-flow="request"><b>1 · Request</b><span>You set the goal, together</span></button>
+          <button aria-pressed="false" data-flow="plan"><b>2 · Plan</b><span>You and Weaver shape it</span></button>
+          <button aria-pressed="false" data-flow="check"><b>3 · Envelope check</b><span>Sentinel rules first</span></button>
+          <button aria-pressed="false" data-flow="execute"><b>4 · Execute</b><span>Specialist works, you alongside</span></button>
+          <button aria-pressed="false" data-flow="log"><b>5 · Log</b><span>A record you both can read</span></button>
+          <button aria-pressed="false" data-flow="review"><b>6 · Review</b><span>You review together, then continue</span></button>
+        </div>
+
+        <div class="grid-2" style="align-items:start">
+          <div class="card" id="flowDetail" aria-live="polite">
+            <span class="tag" id="flowTag">Step 1 of 6</span>
+            <h3 id="flowTitle">Request — the goal, in plain language, from you</h3>
+            <p id="flowText" style="color:var(--ink-2);font-size:15px;margin-top:6px">You state what “done” looks like, and any limits that matter: budget, deadline, who may be contacted, what must not be touched — plus the context only you know. The request itself becomes part of the record you both work from.</p>
+          </div>
+          <div>
+            <p style="font-weight:800;font-size:14px;margin:0 0 8px">The envelope, as a readable rule</p>
+            <div class="policy"><span class="c"># every proposed action is checked first</span>
+<span class="k">check</span>(action):
+  <span class="k">if</span> action.scope <span class="k">not in</span> envelope.scope: <span class="k">return</span> <span class="s">"DENY"</span>
+  <span class="k">if</span> action.spend &gt; envelope.limit:  <span class="k">return</span> <span class="s">"ESCALATE"</span>
+  <span class="k">if</span> action.is_reversible:          <span class="k">return</span> <span class="s">"ALLOW"</span>
+  <span class="k">return</span> <span class="s">"CONSTRAIN"</span>  <span class="c"># limited, logged, shared with you</span></div>
+            <p class="body-sm" style="margin-top:10px">Illustrative pseudocode — the real point is that the rule is short, explicit, and enforced by the hub, not left to each agent's judgement, so the partnership it protects stays visible to you.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10 · COMPARISON -->
+    <section class="slide" data-title="What changes" data-notes="This is the summary slide for anyone who joined late. Read the right-hand column only — it is the whole pitch in six lines: people and agents, together, on the same work.">
+      <div class="slide-inner">
+        <div class="eyebrow-row"><span class="slide-no">10 / 12</span><p class="kicker" style="margin:0">What changes</p></div>
+        <h2>Same agents.<br>Different relationship.</h2>
+        <p class="lede">The hub doesn't replace the agents you already use, and it doesn't replace you. It changes <strong>how you work together</strong> — so the same capability becomes something a person and their agents can rely on, jointly.</p>
+        <div class="compare">
+          <div class="col without">
+            <h3>Agents apart from people</h3>
+            <ul>
+              <li>Agents work in <b>separate threads</b>, away from the person who owns the outcome.</li>
+              <li>Authority is <b>assumed</b> — each agent decides its own limits.</li>
+              <li>You meet the work <b>at the end</b>, to approve or undo it.</li>
+              <li>Intent and context stay <b>in your head</b>, never in the task.</li>
+              <li>People either <b>watch everything</b> or <b>trust blindly</b>.</li>
+            </ul>
+          </div>
+          <div class="col with">
+            <h3>People and agents, together</h3>
+            <ul>
+              <li>You and the agents share <b>one plan and one set of facts</b>.</li>
+              <li>Authority is <b>declared and checked</b> before every action.</li>
+              <li>You work <b>inside the task throughout</b> — editing, redirecting, deciding together.</li>
+              <li>Every action has <b>a record you both can replay</b>.</li>
+              <li>Each side does <b>what it does best</b>, and hands the rest back and forth.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="callout" style="margin-top:16px"><b>The principle behind it:</b><p>No consequential action should depend on an unverified assumption about the state of the system. The hub verifies first — and the co in co-agent means the action is worked on <em>with</em> the person who owns the outcome, not apart from them.</p></div>
+      </div>
+    </section>
+
+    <!-- 11 · GET STARTED -->
+    <section class="slide" data-title="Get started" data-notes="Close the pitch with three concrete steps, in order. The first step is deliberately not technical: deciding how you and the agents will work together is a decision about the partnership, not a deployment.">
+      <div class="slide-inner">
+        <div class="eyebrow-row"><span class="slide-no">11 / 12</span><p class="kicker" style="margin:0">Get started</p></div>
+        <h2>Three steps to a<br>first task worked together.</h2>
+        <p class="lede">Start small, with one task you work on alongside the agents — and let the way you share the work grow with the trust you earn from the record.</p>
+
+        <div class="step open">
+          <button aria-expanded="true"><span class="step-no">1</span><span><b>Decide how you'll work together</b><small>Agree the division of work — yours, the agents', and the steps you do jointly — before anyone builds anything.</small></span></button>
+          <div class="step-body">
+            <p>Write down, in plain language: what you will always do yourself, what agents may do alone, and what you will always do together. Add the tools, the data, the spend limit, and the steps that are never finished without you in them. If the partnership can't be written down, it can't be kept.</p>
+            <ul><li>Pick one task and name who does each part of it.</li><li>Name the spend limit and the steps you decide together.</li><li>List the data that is never to leave the hub.</li></ul>
+          </div>
+        </div>
+        <div class="step">
+          <button aria-expanded="false"><span class="step-no">2</span><span><b>Bring the agents into your work</b><small>Give the specialists you already use a place beside you in the same task.</small></span></button>
+          <div class="step-body">
+            <p>Give each agent its role, its tools, and its limits in the hub — the same team you saw on slide 5, with you on it. Existing agents keep their skills; the hub adds the shared plan, the back-and-forth handoffs, and the checks around the work you do together.</p>
+            <ul><li>Register each agent with its allowed tools.</li><li>Set Sentinel's checks for that work.</li><li>Run a dry run with no external actions, working it together.</li></ul>
+          </div>
+        </div>
+        <div class="step">
+          <button aria-expanded="false"><span class="step-no">3</span><span><b>Work the first task together</b><small>One real task, worked side by side, with the record to show how it went.</small></span></button>
+          <div class="step-body">
+            <p>Choose a task with visible output and modest risk — a briefing, a triage pass, a checklist. Work it together: set the direction, let the agents do the legwork, step in to edit and redirect, decide the consequential steps jointly — then review the log together and widen what agents do alone only where the record justifies it.</p>
+            <ul><li>Work it with joint decisions on for every consequential step.</li><li>Review the log as a team — person and agents.</li><li>Widen scope one step at a time, on evidence.</li></ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 12 · CLOSING -->
+    <section class="slide" data-title="Discussion" data-notes="End by handing the conversation back. The three discussion questions are designed to surface how the room wants to work with agents: what they would do together, what stays in their hands, and which task they would start with. The closing line is the framing itself: co-agents work with people — that is the co part.">
+      <div class="slide-inner">
+        <div class="eyebrow-row"><span class="slide-no">12 / 12</span><p class="kicker" style="margin:0">To close</p></div>
+        <div class="closing-grid">
+          <div>
+            <p class="big-domain">Co-agents work<br>with people.<br>That is the co part.</p>
+            <p class="lede" style="margin-top:16px">CoAgentHub is the idea that <strong>people and agents do the work together</strong> — and that the teams who work that way, side by side, will be the ones who can actually hand real work to agents.</p>
+            <div class="btn-row">
+              <button class="btn btn-primary" data-goto="0">↺ Replay from the start</button>
+              <button class="btn btn-ghost" data-goto="3">Re-run the demo</button>
+              <button class="btn btn-ghost" id="openOverview2">Browse all slides</button>
+            </div>
+            <p class="concept-note">Concept example for <b>coagenthub.com</b> — the workflows, agents, and verdicts in this deck are illustrative, built to demonstrate the idea in a presentation. No live product, pricing, or availability is claimed.</p>
+          </div>
+          <div class="card">
+            <span class="tag">For discussion</span>
+            <h3>Three questions for the room</h3>
+            <ol class="list-clean discuss" style="list-style:none">
+              <li><b>What would you do together?</b> Which part of your work belongs to you and an agent, side by side — not to either alone?</li>
+              <li><b>What stays in your hands?</b> Which calls would you never hand off, and what evidence would you want beside you when you make them?</li>
+              <li><b>Which task would you start with</b> if you could work it together, handing it back and forth, with every step on the record?</li>
+            </ol>
+            <p class="body-sm" style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px">Thank you. Questions welcome — and every demo in this deck is still live if you'd like to try it again, together.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <div class="notes-bar" id="notesBar" hidden><b>Presenter notes — </b><span id="notesText"></span></div>
+
+  <footer class="deck-nav">
+    <button class="nav-btn" id="prevBtn">← Previous</button>
+    <div class="dots" id="dots" role="tablist" aria-label="Slides"></div>
+    <span class="counter" id="counter">1 / 12</span>
+    <button class="nav-btn" id="nextBtn">Next →</button>
+    <span class="hint">← → keys · swipe · O for overview</span>
+  </footer>
+
+  <div class="overview" id="overview" hidden role="dialog" aria-modal="true" aria-label="All slides">
+    <div class="overview-inner">
+      <div class="overview-head">
+        <div><h2 style="margin:0;font-size:26px">All slides</h2><p class="body-sm" style="margin:4px 0 0">Jump anywhere. The demos stay live when you return.</p></div>
+        <button class="close-x" id="closeOverview">Close ✕</button>
+      </div>
+      <div class="overview-grid" id="overviewGrid"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
+  var current = 0;
+  var progressBar = document.getElementById("progressBar");
+  var counter = document.getElementById("counter");
+  var chromeSub = document.getElementById("chromeSub");
+  var dotsWrap = document.getElementById("dots");
+  var notesBar = document.getElementById("notesBar");
+  var notesText = document.getElementById("notesText");
+  var notesBtn = document.getElementById("notesBtn");
+  var notesOn = false;
+
+  function titles(){
+    return slides.map(function(s){ return s.getAttribute("data-title") || "Slide"; });
+  }
+  // Dots
+  slides.forEach(function(s,i){
+    var b = document.createElement("button");
+    b.type = "button";
+    b.setAttribute("aria-label","Go to slide "+(i+1)+": "+s.getAttribute("data-title"));
+    b.addEventListener("click",function(){ goTo(i); });
+    dotsWrap.appendChild(b);
+  });
+  var dots = Array.prototype.slice.call(dotsWrap.children);
+
+  // Overview grid
+  var grid = document.getElementById("overviewGrid");
+  slides.forEach(function(s,i){
+    var b = document.createElement("button");
+    b.type = "button";
+    b.innerHTML = '<span class="n">SLIDE '+(i+1<10?"0"+(i+1):(i+1))+'</span><b></b><span></span>';
+    b.querySelector("b").textContent = s.getAttribute("data-title");
+    var sub = s.querySelector(".lede");
+    b.querySelector("span:last-child").textContent = sub ? sub.textContent.replace(/\s+/g," ").slice(0,72)+"…" : "";
+    b.addEventListener("click",function(){ closeOverview(); goTo(i); });
+    grid.appendChild(b);
+  });
+
+  function updateNotes(){
+    if(notesOn){
+      notesText.textContent = slides[current].getAttribute("data-notes") || "";
+      notesBar.hidden = false;
+    } else { notesBar.hidden = true; }
+  }
+  function goTo(i){
+    if(i<0) i=0; if(i>=slides.length) i=slides.length-1;
+    current = i;
+    slides.forEach(function(s,idx){ s.classList.toggle("active", idx===current); });
+    dots.forEach(function(d,idx){ d.setAttribute("aria-current", idx===current ? "true":"false"); });
+    progressBar.style.width = ((current+1)/slides.length*100)+"%";
+    counter.textContent = (current+1)+" / "+slides.length;
+    chromeSub.textContent = slides[current].getAttribute("data-title");
+    document.getElementById("prevBtn").disabled = current===0;
+    document.getElementById("nextBtn").textContent = current===slides.length-1 ? "↺ Restart" : "Next →";
+    var stage = document.getElementById("stage");
+    stage.scrollTop = 0;
+    slides[current].scrollTop = 0;
+    updateNotes();
+  }
+  document.getElementById("prevBtn").addEventListener("click",function(){ goTo(current-1); });
+  document.getElementById("nextBtn").addEventListener("click",function(){
+    if(current===slides.length-1) goTo(0); else goTo(current+1);
+  });
+  document.querySelectorAll("[data-goto]").forEach(function(el){
+    el.addEventListener("click",function(){ goTo(parseInt(el.getAttribute("data-goto"),10)); });
+  });
+
+  // Overview
+  var overview = document.getElementById("overview");
+  function openOverview(){ overview.hidden = false; document.getElementById("closeOverview").focus(); }
+  function closeOverview(){ overview.hidden = true; }
+  document.getElementById("overviewBtn").addEventListener("click",openOverview);
+  document.getElementById("openOverview2").addEventListener("click",openOverview);
+  document.getElementById("closeOverview").addEventListener("click",closeOverview);
+  overview.addEventListener("click",function(e){ if(e.target===overview) closeOverview(); });
+
+  // Notes + fullscreen
+  notesBtn.addEventListener("click",function(){
+    notesOn = !notesOn;
+    notesBtn.setAttribute("aria-pressed", notesOn ? "true":"false");
+    updateNotes();
+  });
+  document.getElementById("fullBtn").addEventListener("click",function(){
+    if(document.fullscreenElement){ document.exitFullscreen(); }
+    else if(document.documentElement.requestFullscreen){ document.documentElement.requestFullscreen(); }
+  });
+
+  // Keyboard
+  document.addEventListener("keydown",function(e){
+    if(e.key==="Escape"){ closeOverview(); return; }
+    if(e.key==="ArrowRight" || e.key==="PageDown" || e.key===" "){ e.preventDefault(); goTo(current===slides.length-1?0:current+1); }
+    else if(e.key==="ArrowLeft" || e.key==="PageUp"){ e.preventDefault(); goTo(current-1); }
+    else if(e.key==="Home"){ goTo(0); }
+    else if(e.key==="End"){ goTo(slides.length-1); }
+    else if(e.key==="o" || e.key==="O"){ if(overview.hidden) openOverview(); else closeOverview(); }
+  });
+
+  // Swipe
+  var touchX = null;
+  var stageEl = document.getElementById("stage");
+  stageEl.addEventListener("touchstart",function(e){ touchX = e.changedTouches[0].clientX; },{passive:true});
+  stageEl.addEventListener("touchend",function(e){
+    if(touchX===null) return;
+    var dx = e.changedTouches[0].clientX - touchX;
+    if(Math.abs(dx)>60){ if(dx<0) goTo(current+1); else goTo(current-1); }
+    touchX = null;
+  },{passive:true});
+
+  /* ---------- Slide 2: scenario toggle ---------- */
+  var scenBtns = document.querySelectorAll("[data-scenario]");
+  scenBtns.forEach(function(b){
+    b.addEventListener("click",function(){
+      scenBtns.forEach(function(x){ x.setAttribute("aria-selected","false"); });
+      b.setAttribute("aria-selected","true");
+      document.getElementById("panel-solo").classList.toggle("active", b.getAttribute("data-scenario")==="solo");
+      document.getElementById("panel-swarm").classList.toggle("active", b.getAttribute("data-scenario")==="swarm");
+    });
+  });
+
+  /* ---------- Slide 3: pillars ---------- */
+  document.querySelectorAll(".pillar").forEach(function(p){
+    p.addEventListener("click",function(){
+      var id = p.getAttribute("data-pillar");
+      var detail = document.getElementById(id);
+      var open = detail.classList.contains("open");
+      document.querySelectorAll(".pillar-detail").forEach(function(d){ d.classList.remove("open"); });
+      document.querySelectorAll(".pillar").forEach(function(x){ x.setAttribute("aria-expanded","false"); });
+      if(!open){ detail.classList.add("open"); p.setAttribute("aria-expanded","true"); }
+    });
+  });
+
+  /* ---------- Slide 4: demo runner ---------- */
+  var TASKS = {
+    briefing: {
+      label: "vendor briefing",
+      result: "Briefing ready: you set the direction and the tone, 4 sources were checked, 1 claim was flagged for you, and you edited the draft mid-task before it was finished together — exactly how co-agents are meant to work.",
+      steps: [
+        ["you","You","Goal + context only you know: protect the May window, keep the tone warm — Acme is a long-term partner."],
+        ["weaver","Weaver","Plan ready — 4 steps: research, verify, draft, check. Built around your goal."],
+        ["scout","Scout","Found 4 sources: pricing page, delivery terms, 2 reviews."],
+        ["scout","Scout","Verified delivery window against the vendor's own terms."],
+        ["scribe","Scribe","Drafted the briefing: summary, risks, open questions."],
+        ["you","You","You edit the draft mid-task — soften one line, add the delivery detail Scout missed."],
+        ["sentinel","Sentinel","Check: nothing sent, nothing spent. You and Scribe finish it together."],
+        ["weaver","Weaver","Handoff complete. Briefing ready — worked on together, start to finish."]
+      ]
+    },
+    inbox: {
+      label: "support inbox triage",
+      result: "Inbox triaged together: you set which customers need a personal touch, 6 routine replies were drafted, 2 cases came back to you with evidence, and 1 refund was decided with you. Nothing was sent without you in the work.",
+      steps: [
+        ["you","You","You set the priorities: two customers need a personal touch, the rest can be routine."],
+        ["weaver","Weaver","Plan ready — 8 messages sorted: 6 routine, 2 personal, with you."],
+        ["scout","Scout","Pulled account history for all 8 cases."],
+        ["ledger","Ledger","Checked billing on 2 cases — found 1 duplicate charge."],
+        ["scribe","Scribe","Drafted 6 routine replies, each citing the relevant policy."],
+        ["you","You","You rewrite one reply yourself — this customer knows you by name."],
+        ["sentinel","Sentinel","Check: refund of $420 exceeds the $100 limit — decided together, not alone."],
+        ["weaver","Weaver","Handoff complete. 6 drafts + 2 joint decisions in the record."]
+      ]
+    },
+    launch: {
+      label: "launch checklist",
+      result: "Checklist drafted together: you made the date and trade-off calls, 9 steps were prepared, 2 blockers surfaced early — and the production step was worked on with you until the checks passed.",
+      steps: [
+        ["you","You","You set the launch date and the trade-offs: docs first, comms second, no shortcuts on checks."],
+        ["weaver","Weaver","Plan ready — 9 steps across docs, comms, and systems, around your calls."],
+        ["scout","Scout","Checked docs, status page, and support macros for gaps."],
+        ["scribe","Scribe","Drafted announcements and the internal runbook."],
+        ["ledger","Ledger","Confirmed billing and access lists are current."],
+        ["you","You","You change direction mid-task — hold the announcement until the sandbox test passes."],
+        ["sentinel","Sentinel","Check: production change stays with you. Sandbox test passed."],
+        ["weaver","Weaver","Handoff complete. Checklist ready for you and the team to finish together."]
+      ]
+    }
+  };
+  var selectedTask = "briefing";
+  var demoTimers = [];
+  var demoRunning = false;
+  var demoLog = document.getElementById("demoLog");
+  var demoBar = document.getElementById("demoBar");
+  var runBtn = document.getElementById("runDemo");
+  var demoResult = document.getElementById("demoResult");
+
+  document.querySelectorAll("[data-task]").forEach(function(b){
+    b.addEventListener("click",function(){
+      if(demoRunning) return;
+      document.querySelectorAll("[data-task]").forEach(function(x){ x.setAttribute("aria-pressed","false"); });
+      b.setAttribute("aria-pressed","true");
+      selectedTask = b.getAttribute("data-task");
+      resetDemo(false);
+    });
+  });
+  function setPill(agent, state){
+    var pill = document.querySelector('.agent-pill[data-agent="'+agent+'"]');
+    if(!pill) return;
+    pill.classList.remove("working","done");
+    if(state==="working") pill.classList.add("working");
+    if(state==="done") pill.classList.add("done");
+    pill.querySelector(".st").textContent = state==="working" ? "working…" : state==="done" ? "done" : "idle";
+  }
+  function resetDemo(clearLog){
+    demoTimers.forEach(clearTimeout); demoTimers = [];
+    demoRunning = false; runBtn.disabled = false; runBtn.textContent = "▶ Run task";
+    demoBar.style.width = "0%";
+    demoResult.classList.remove("show");
+    ["you","weaver","scout","scribe","sentinel","ledger"].forEach(function(a){ setPill(a,"idle"); });
+    if(clearLog!==false){
+      demoLog.innerHTML = '<li><span class="t">HUB</span> — Ready. Choose a task and press Run task.</li>';
+    }
+  }
+  document.getElementById("resetDemo").addEventListener("click",function(){ resetDemo(true); });
+  function addLog(html, cls){
+    var li = document.createElement("li");
+    if(cls) li.className = cls;
+    li.innerHTML = html;
+    demoLog.appendChild(li);
+    var box = demoLog.parentElement;
+    box.scrollTop = box.scrollHeight;
+  }
+  runBtn.addEventListener("click",function(){
+    if(demoRunning) return;
+    demoRunning = true; runBtn.disabled = true; runBtn.textContent = "Running…";
+    demoLog.innerHTML = "";
+    demoResult.classList.remove("show");
+    var task = TASKS[selectedTask];
+    addLog('<span class="t">HUB</span> — Task started: '+task.label+'.');
+    task.steps.forEach(function(step, idx){
+      demoTimers.push(setTimeout(function(){
+        var agent = step[0], name = step[1], text = step[2];
+        ["you","weaver","scout","scribe","sentinel","ledger"].forEach(function(a){ if(a!==agent) setPill(a, a===agent?"working":"idle"); });
+        setPill(agent,"working");
+        var cls = name==="Sentinel" ? "warn" : (idx===task.steps.length-1 ? "ok" : "");
+        addLog('<span class="t">'+name.toUpperCase()+'</span> — '+text, cls);
+        demoBar.style.width = Math.round((idx+1)/task.steps.length*100)+"%";
+        if(idx===task.steps.length-1){
+          demoTimers.push(setTimeout(function(){
+            ["you","weaver","scout","scribe","sentinel","ledger"].forEach(function(a){ setPill(a,"done"); });
+            document.getElementById("demoResultText").textContent = task.result;
+            demoResult.classList.add("show");
+            demoRunning = false; runBtn.disabled = false; runBtn.textContent = "↺ Run again";
+          }, 650));
+        }
+      }, 900*(idx+1)));
+    });
+  });
+
+  /* ---------- Slide 5: roster ---------- */
+  var AGENTS = {
+    you: {tag:"Teammate", name:"You", role:"You bring what no agent has: the intent behind the task, the context and relationships only you know, and the judgement of what “good” looks like here. You work in the task throughout — setting direction, editing, redirecting, taking over a step — not only at the end.", tools:"The plan, the drafts, the record — everything, at any step", sees:"The whole task: plan, evidence, checks, and decisions", status:"● Here — in the work, not watching from outside", yes:"Set the goal, add context, edit, redirect, or take over any step — at any point.", no:"Send, spend, or commit on your behalf. Agents prepare; you decide — together."},
+    weaver: {tag:"Coordinator", name:"Weaver", role:"Turns a request you shape into a plan, assigns each step to the right specialist, and makes sure handoffs — to agents and back to you — carry the full context, not a summary of a summary.", tools:"Planner, task queue, handoff ledger", sees:"The plan, task status, and shared facts", status:"● Ready — no task running", yes:"Plan, assign, and re-sequence steps inside the scope you set together.", no:"Contact anyone outside the team, or change the scope of the task without you."},
+    scout: {tag:"Researcher", name:"Scout", role:"Finds information, checks it against its source, and flags what is uncertain instead of smoothing it over.", tools:"Web search, document reader, source checker", sees:"Public sources and approved internal documents", status:"● Ready — last check: 4 sources verified", yes:"Read public and approved sources; quote with citations.", no:"Access private accounts, or present an unverified claim as fact."},
+    scribe: {tag:"Writer", name:"Scribe", role:"Drafts, summarises, and edits — always as a draft first, so you can catch a confident mistake mid-task, in the work, before it leaves the hub.", tools:"Drafting, summarising, style guides", sees:"Approved drafts and shared facts only", status:"● Ready — drafts come back to you before sending", yes:"Draft messages, briefs, and summaries inside the hub, for you to shape.", no:"Send anything externally, or quote internal data publicly."},
+    ledger: {tag:"Operations", name:"Ledger", role:"Works the numbers: invoices, duplicates, renewals, and records — with the evidence attached to every figure it reports, for you to decide on.", tools:"Billing records, reconciliation, duplicate detection", sees:"Financial records inside the approved scope", status:"● Ready — 1 duplicate found in the demo", yes:"Reconcile, flag duplicates, and prepare payments.", no:"Move money above the $100 limit, or pay without evidence you have seen."},
+    sentinel: {tag:"Guardrails", name:"Sentinel", role:"Checks every proposed action against the envelope before it runs, and logs the verdict — including the denials. It never does the work itself, so it never has a reason to wave itself through, and it never stands between you and the work.", tools:"Policy engine, envelope rules, audit log", sees:"Every proposed action and its context", status:"● Checking — 5 checks run this session", yes:"Allow, constrain, escalate, or deny any action.", no:"Execute work, contact anyone, or change its own rules."}
+  };
+  document.querySelectorAll("[data-agent-card]").forEach(function(card){
+    card.addEventListener("click",function(){
+      document.querySelectorAll("[data-agent-card]").forEach(function(x){ x.setAttribute("aria-pressed","false"); });
+      card.setAttribute("aria-pressed","true");
+      var a = AGENTS[card.getAttribute("data-agent-card")];
+      document.getElementById("adTag").textContent = a.tag;
+      document.getElementById("adName").textContent = a.name;
+      document.getElementById("adRole").textContent = a.role;
+      document.getElementById("adTools").textContent = a.tools;
+      document.getElementById("adSees").textContent = a.sees;
+      document.getElementById("adStatus").textContent = a.status;
+      document.getElementById("adYes").textContent = a.yes;
+      document.getElementById("adNo").textContent = a.no;
+    });
+  });
+
+  /* ---------- Slide 6: envelope simulator ---------- */
+  var ACTIONS = {
+    read: {verdict:"ALLOW", cls:"allow", text:"Reading a public page is inside the scope you set with Scribe: public data, no credentials, nothing irreversible. The read runs, the log records what was fetched and when — and you can pick the work up from there.", meta:"ENVELOPE CHECK · scope ✓ · data ✓ · spend ✓ · working together: you can step in at any time"},
+    draft: {verdict:"CONSTRAIN", cls:"constrain", text:"Drafting is allowed, but sending is not part of this step. The draft stays inside the hub, marked draft-only, and comes back to you to shape before it can go anywhere.", meta:"ENVELOPE CHECK · scope ✓ · data ✓ · spend ✓ · working together: draft returns to you first"},
+    send: {verdict:"ESCALATE", cls:"escalate", text:"Sending commits the team to a date and a promise. That is consequential, so you and Scribe decide it together, with the draft in front of you — see slide 7. Nothing is sent while you are working on it.", meta:"ENVELOPE CHECK · scope ✓ · data ✓ · spend ✓ · working together: REQUIRED — decide it together"},
+    refund: {verdict:"ESCALATE", cls:"escalate", text:"The refund is legitimate work, but $420 is above the $100 agent limit. You and Ledger decide it together, with the invoice and the duplicate-charge evidence attached. The limit, not the agent's judgement, decides how you share the step.", meta:"ENVELOPE CHECK · scope ✓ · data ✓ · spend ✕ over $100 limit · working together: REQUIRED"},
+    del: {verdict:"DENY", cls:"deny", text:"Deleting a production database is irreversible and outside every agent's scope — and outside the work you set together. The action is blocked before it reaches any tool — and the attempt itself is written to the ledger, so the denial can be audited too.", meta:"ENVELOPE CHECK · scope ✕ · data ✕ · spend — · working together: blocked — no one acts alone here"}
+  };
+  // fix key mismatch: button uses data-action="delete"
+  ACTIONS["delete"] = ACTIONS["del"];
+  var ledgerCount = 1;
+  document.querySelectorAll("[data-action]").forEach(function(b){
+    b.addEventListener("click",function(){
+      document.querySelectorAll("[data-action]").forEach(function(x){ x.setAttribute("aria-pressed","false"); });
+      b.setAttribute("aria-pressed","true");
+      var a = ACTIONS[b.getAttribute("data-action")];
+      var box = document.getElementById("verdictBox");
+      box.className = "verdict " + a.cls;
+      document.getElementById("verdictBadge").textContent = a.verdict;
+      document.getElementById("verdictText").textContent = a.text;
+      document.getElementById("verdictMeta").textContent = a.meta;
+      ledgerCount++;
+      var label = b.querySelector("span").firstChild.textContent;
+      var li = document.createElement("li");
+      var mins = 9 + ledgerCount;
+      li.textContent = "09:" + (mins<10?"0"+mins:mins) + ":00 · " + label.trim() + " · " + a.verdict;
+      document.getElementById("simLedger").appendChild(li);
+    });
+  });
+
+  /* ---------- Slide 7: approvals ---------- */
+  var counts = {Approved:0, "Returned for edit":0, Denied:0};
+  document.querySelectorAll(".req-card .req-actions button").forEach(function(btn){
+    btn.addEventListener("click",function(){
+      var card = btn.closest(".req-card");
+      if(card.classList.contains("decided")) return;
+      var decision = btn.getAttribute("data-decision");
+      card.classList.add("decided");
+      card.querySelectorAll("button").forEach(function(x){ x.disabled = true; });
+      var note = document.createElement("p");
+      note.style.cssText = "font-weight:800;font-size:14px;margin:10px 0 0";
+      note.textContent = "Decision: " + decision + " — decided together, and recorded with the evidence attached.";
+      card.appendChild(note);
+      counts[decision]++;
+      document.getElementById("cApproved").textContent = counts["Approved"];
+      document.getElementById("cReturned").textContent = counts["Returned for edit"];
+      document.getElementById("cDenied").textContent = counts["Denied"];
+      var log = document.getElementById("decisionLog");
+      if(log.querySelector("li") && log.textContent.indexOf("No decisions yet")===0) log.innerHTML = "";
+      var li = document.createElement("li");
+      var title = card.querySelector("h3").textContent;
+      li.innerHTML = "<b>"+decision+":</b> "+title;
+      log.appendChild(li);
+      var remaining = document.querySelectorAll(".req-card:not(.decided)").length;
+      if(remaining===0) document.getElementById("queueDone").style.display = "block";
+    });
+  });
+  document.getElementById("resetQueue").addEventListener("click",function(){
+    counts = {Approved:0, "Returned for edit":0, Denied:0};
+    document.getElementById("cApproved").textContent = "0";
+    document.getElementById("cReturned").textContent = "0";
+    document.getElementById("cDenied").textContent = "0";
+    document.querySelectorAll(".req-card").forEach(function(card){
+      card.classList.remove("decided");
+      card.querySelectorAll("button").forEach(function(x){ x.disabled = false; });
+      var note = card.querySelector("p[style]");
+      if(note) note.remove();
+    });
+    document.getElementById("decisionLog").innerHTML = "<li>No decisions yet — the work is waiting on you and the agents, together.</li>";
+    document.getElementById("queueDone").style.display = "none";
+  });
+
+  /* ---------- Slide 8: use-case tabs ---------- */
+  document.querySelectorAll("[data-use]").forEach(function(b){
+    b.addEventListener("click",function(){
+      document.querySelectorAll("[data-use]").forEach(function(x){ x.setAttribute("aria-selected","false"); });
+      b.setAttribute("aria-selected","true");
+      document.querySelectorAll("[id^='use-']").forEach(function(p){ p.classList.remove("active"); });
+      document.getElementById("use-"+b.getAttribute("data-use")).classList.add("active");
+    });
+  });
+
+  /* ---------- Slide 9: flow ---------- */
+  var FLOW = {
+    request: ["Step 1 of 6","Request — the goal, in plain language, from you","You state what “done” looks like, and any limits that matter: budget, deadline, who may be contacted, what must not be touched — plus the context only you know. The request itself becomes part of the record you both work from."],
+    plan: ["Step 2 of 6","Plan — you and Weaver shape it together","The request becomes ordered steps with an owner for each — you or an agent — a definition of done, and the facts each step will need. You correct the plan as it forms. If a step can't be stated clearly, it isn't assigned yet."],
+    check: ["Step 3 of 6","Envelope check — Sentinel rules first","Before any tool runs, the proposed action is checked against scope, data, spend, and whether it is a step you decide together. The verdict — ALLOW, CONSTRAIN, ESCALATE, or DENY — is decided here, not negotiated after the fact."],
+    execute: ["Step 4 of 6","Execute — the specialist works, with you alongside","Only checked actions run, and only with the tools and data the envelope allows. The agent works inside its limits, and you can watch, edit, or step in at any point; anything beyond the limits returns to the check — and to you — not around either."],
+    log: ["Step 5 of 6","Log — a record you both can read","The plan, the verdict, the tool call, and the result are written to the record in order — your steps and the agents', alike. A denied attempt is logged too — the record shows what was stopped, not only what succeeded."],
+    review: ["Step 6 of 6","Review — you review together, then continue","The finished work arrives with its evidence: sources, checks, and decisions. You and the agents review the outcome and the trail together, you redirect or take the next step yourself, and the review itself is recorded. The work loops back to step 1 whenever you say so."]
+  };
+  document.querySelectorAll("[data-flow]").forEach(function(b){
+    b.addEventListener("click",function(){
+      document.querySelectorAll("[data-flow]").forEach(function(x){ x.setAttribute("aria-pressed","false"); });
+      b.setAttribute("aria-pressed","true");
+      var f = FLOW[b.getAttribute("data-flow")];
+      document.getElementById("flowTag").textContent = f[0];
+      document.getElementById("flowTitle").textContent = f[1];
+      document.getElementById("flowText").textContent = f[2];
+    });
+  });
+
+  /* ---------- Slide 11: steps accordion ---------- */
+  document.querySelectorAll(".step > button").forEach(function(b){
+    b.addEventListener("click",function(){
+      var step = b.parentElement;
+      var wasOpen = step.classList.contains("open");
+      document.querySelectorAll(".step").forEach(function(s){
+        s.classList.remove("open");
+        s.querySelector("button").setAttribute("aria-expanded","false");
+      });
+      if(!wasOpen){ step.classList.add("open"); b.setAttribute("aria-expanded","true"); }
+    });
+  });
+
+  goTo(0);
+})();
+</script>
+</body>
+</html>
